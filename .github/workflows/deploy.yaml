@@ -12,19 +12,19 @@ jobs:
       - uses: actions/checkout@v2
       - run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
       # build image for frontend
-      - run: docker build -t basem/multi-container-test -f ./client/Dockerfile.dev ./client
+      - run: docker build -t bhassan310/multi-container-test -f ./client/Dockerfile.dev ./client
       # run test for frontend
-      - run: docker run -e CI=true basem/multi-container-test npm run test
+      - run: docker run -e CI=true bhassan310/multi-container-test npm run test
       # build production images
-      - run: docker build -t basem/multi-container-client ./client
-      - run: docker build -t basem/multi-container-nginx ./nginx
-      - run: docker build -t basem/multi-container-api ./server
-      - run: docker build -t basem/multi-container-worker ./worker
+      - run: docker build -t bhassan310/multi-container-client ./client
+      - run: docker build -t bhassan310/multi-container-nginx ./nginx
+      - run: docker build -t bhassan310/multi-container-api ./server
+      - run: docker build -t bhassan310/multi-container-worker ./worker
       # push images to docker hub
-      - run: docker push basem/multi-container-client
-      - run: docker push basem/multi-container-nginx
-      - run: docker push basem/multi-container-api
-      - run: docker push basem/multi-container-worker
+      - run: docker push bhassan310/multi-container-client
+      - run: docker push bhassan310/multi-container-nginx
+      - run: docker push bhassan310/multi-container-api
+      - run: docker push bhassan310/multi-container-worker
 
       # - name: Generate deployment package
       #   run: zip -r deploy.zip . -x '*.git*'
