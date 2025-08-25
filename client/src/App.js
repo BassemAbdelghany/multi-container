@@ -1,13 +1,13 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import OtherPage from "./OtherPage";
 import Fib from "./Fib";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <div className="App">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
@@ -27,7 +27,7 @@ function App() {
           <Route path="/otherpage" element={<OtherPage />} />
         </Routes>
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 
