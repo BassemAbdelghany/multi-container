@@ -7,34 +7,46 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: sandbox
+    # environment: sandbox
     steps:
       - uses: actions/checkout@v2
       - run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-      - run: docker build -t basem/react-test -f Dockerfile.dev .
-      - run: docker run -e CI=true basem/react-test npm run test
-      - name: Generate deployment package
-        run: zip -r deploy.zip . -x '*.git*'
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4.3.3
-        with:
-          name: deploy-files
-          path: deploy.zip
+      # build image for frontend
+      - run: docker build -t basem/multi-container-react -f ./client/Dockerfile.dev .
+      # run test for frontend
+      - run: docker run -e CI=true basem/multi-container-react npm run test
+      # build other images
+      - run: docker build -t basem/multi-container-nginx -f ./nginx/Dockerfile.dev .
+      - run: docker build -t basem/multi-container-api -f ./server/Dockerfile.dev .
+      - run: docker build -t basem/multi-container-worker -f ./worker/Dockerfile.dev .
+      # push images to docker hub
+      - run: docker push basem/multi-container-react
+      - run: docker push basem/multi-container-nginx
+      - run: docker push basem/multi-container-api
+      - run: docker push basem/multi-container-worker
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment: sandbox
-    steps:
-    - uses: actions/download-artifact@v4.1.7
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v18
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-        application_name: frontend
-        environment_name: Frontend-env
-        existing_bucket_name: elasticbeanstalk-eu-west-1-831986041050
-        region: eu-west-1
-        version_label: ${{ github.sha }}
-        deployment_package: "deploy-files/deploy.zip"
+      # - name: Generate deployment package
+      #   run: zip -r deploy.zip . -x '*.git*'
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v4.3.3
+      #   with:
+      #     name: deploy-files
+      #     path: deploy.zip
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   environment: sandbox
+  #   steps:
+  #   - uses: actions/download-artifact@v4.1.7
+  #   - name: Deploy to EB
+  #     uses: einaregilsson/beanstalk-deploy@v18
+  #     with:
+  #       aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+  #       aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+  #       application_name: frontend
+  #       environment_name: Frontend-env
+  #       existing_bucket_name: elasticbeanstalk-eu-west-1-831986041050
+  #       region: eu-west-1
+  #       version_label: ${{ github.sha }}
+  #       deployment_package: "deploy-files/deploy.zip"
