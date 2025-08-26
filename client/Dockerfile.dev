@@ -1,8 +1,19 @@
-FROM node:lts-alpine
-WORKDIR '/app'
-COPY ./package.json ./
-RUN npm config set registry https://registry.npmjs.org/ \
- && npm config set always-auth false \
- && npm ci
+# ---------- Base image ----------
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Force public npm registry inside the image
+# (avoids polluted .npmrc / private mirrors causing 403s)
+RUN npm set registry https://registry.npmjs.org/
+
+# Copy only manifests first for better caching
+COPY package.json package-lock.json ./
+
+# Deterministic, fast CI-friendly install (requires package-lock.json)
+RUN npm ci
+
+# Now bring in the rest of the app
 COPY . .
-CMD ["npm", "run", "start"]
+
+# Default command (adjust if you use another script)
+CMD ["npm", "start"]
