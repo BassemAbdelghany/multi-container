@@ -45,29 +45,52 @@ app.get('/', (req, res) => {
 });
 
 app.get('/values/all', async (req, res) => {
-  const values = await pgClient.query('SELECT * from values');
+  try{
+    const values = await pgClient.query('SELECT * from values');
 
-  res.send(values.rows);
+    res.send(values.rows);
+  } catch(err) {
+    console.log(err)
+    res.status(500)
+    res.send({
+      error: 'error get all values'
+    })
+  }
 });
 
 app.get('/values/current', async (req, res) => {
-  redisClient.hgetall('values', (err, values) => {
-    res.send(values);
-  });
+  try{
+    redisClient.hgetall('values', (err, values) => {
+      res.send(values);
+    });
+  } catch(err) {
+    console.log(err)
+    res.status(500)
+    res.send({
+      error: 'error get current values'
+    })
+  }
 });
 
 app.post('/values', async (req, res) => {
-  const index = req.body.index;
+  try{
+    const index = req.body.index;
 
-  if (parseInt(index) > 40) {
-    return res.status(422).send('Index too high');
+    if (parseInt(index) > 40) {
+      return res.status(422).send('Index too high');
+    }
+    redisClient.hset('values', index, 'Nothing yet!');
+    redisPublisher.publish('insert', index);
+    pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
+    res.send({ working: true });
+  } catch(err) {
+    console.log(err)
+    res.status(500)
+    res.send({
+      error: 'error set value'
+    })
   }
-
-  redisClient.hset('values', index, 'Nothing yet!');
-  redisPublisher.publish('insert', index);
-  pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
-
-  res.send({ working: true });
+  
 });
 
 app.listen(5000, (err) => {
