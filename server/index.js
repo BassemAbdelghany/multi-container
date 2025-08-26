@@ -4,7 +4,6 @@ const keys = require('./keys');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const redis = require('redis');
 
 const app = express();
 app.use(cors());
@@ -31,20 +30,13 @@ pgClient.on('connect', (client) => {
 });
 
 // Redis Client Setup
-let redisClient
-let redisPublisher
-const connectRedis = async () => {
-  redisClient = redis.createClient({
-    host: keys.redisHost,
-    port: keys.redisPort,
-    retry_strategy: () => 1000,
-  });
-  redisPublisher = redisClient.duplicate();
-  await redisClient.connect();
-}
-
-connectRedis()
-
+const redis = require('redis');
+const redisClient = redis.createClient({
+  host: keys.redisHost,
+  port: keys.redisPort,
+  retry_strategy: () => 1000,
+});
+const redisPublisher = redisClient.duplicate();
 
 // Express route handlers
 
@@ -98,7 +90,6 @@ app.post('/values', async (req, res) => {
       error: 'error set value'
     })
   }
-  
 });
 
 app.listen(5000, (err) => {
